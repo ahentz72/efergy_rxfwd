@@ -130,7 +130,8 @@ int read_cert(SSL_CTX* ctx) {
     cerr << getOpenSSLError() << endl;
     error = 1;
   }
-
+  EVP_PKEY_free(k);
+  X509_free(x);
   BIO_free(mem);
   return error;
 }
@@ -511,6 +512,8 @@ int handle_request(int sockfd, SSL_CTX* ctx) {
     return -1;
   }
 
+  SSL_free(ssl);
+
   if (close(clientfd) !=0 ) {
     cerr << "Error closing connection: " << strerror(errno) << endl;
     return -1;
@@ -571,7 +574,7 @@ int main(int argc, const char* argv[]) {
     return -1;
   }
 
-  struct sigaction psa;
+  struct sigaction psa = {0};
   psa.sa_handler = intHandler;
   psa.sa_flags = SA_NOCLDSTOP;
   sigaction(SIGINT, &psa, NULL);
@@ -582,6 +585,9 @@ int main(int argc, const char* argv[]) {
       //break;
     }
   }
+
+  SSL_CTX_free(ctx);
+  OPENSSL_cleanup();
 
   // rename file
   time_t current_time = time(NULL);
@@ -596,7 +602,6 @@ int main(int argc, const char* argv[]) {
       abort();
     }
   }
-
   if (close(sockfd) == -1) {
     cerr << "Error closing connection: " << strerror(errno) << endl;
     return -1;

@@ -362,7 +362,11 @@ int handle_request(int sockfd, SSL_CTX* ctx) {
           //cerr << "Reading " << remaining_bytes << " more" << endl;
           int pos = size - remaining_bytes;
           int b = SSL_read(ssl, &body[pos], remaining_bytes);
-          //cerr << "Read " << b << " bytes" << endl;
+          if (b <= 0) {
+            cerr << "Read " << b << " bytes" << endl;
+            cerr << getOpenSSLError() << endl;
+            break;
+          }
           remaining_bytes -= b;
         }
       }
